@@ -1,0 +1,862 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Assistant</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/chromatography.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #e8f4f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+        .chat-container {
+            max-width: 800px;  /* 缩减最大宽度，适合居中显示 */
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #d1e7f5;
+            background-color: #f0f9ff;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;  /* 标题和按钮左右分布 */
+            align-items: center;
+        }
+        .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: #f9fdff;
+        }
+        .chat-footer {
+            padding: 15px;
+            border-top: 1px solid #d1e7f5;
+            background-color: #f0f9ff;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+        .user-message {
+            background-color: #d1e7ff;
+            color: #000;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .assistant-message {
+            background-color: #e2f0ff;
+            color: #000;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+        .agent-tag {
+            display: inline-block;
+            background-color: #cce5ff;
+            color: #0d6efd;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .message-input {
+            border-radius: 20px;
+            padding: 10px 15px;
+            resize: none;
+            border: 1px solid #d1e7f5;
+        }
+        .file-upload-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-upload-btn {
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            background-color: #4da6ff;
+        }
+        .file-upload-input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+        .preview-container {
+            margin-top: 10px;
+            display: none;
+        }
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 5px;
+        }
+        .result-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 5px;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .image-side-by-side {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .image-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        .image-caption {
+            font-size: 0.85em;
+            text-align: center;
+            margin-top: 5px;
+            color: #666;
+        }
+        .thinking {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+        }
+        .dot {
+            height: 8px;
+            width: 8px;
+            margin-right: 5px;
+            background-color: #4da6ff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .dot:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        /* 适配移动端 */
+        @media (max-width: 768px) {
+            .message {
+                max-width: 90%;  /* 移动端消息宽度更大 */
+            }
+            .chat-header h5 {
+                font-size: 1.1em;  /* 缩小标题字体 */
+            }
+        }
+        
+        /* 表格样式 */
+        .message table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .message th, .message td {
+            border: 1px solid #d1e7f5;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .message th {
+            background-color: #e2f0ff;
+            font-weight: bold;
+        }
+        
+        .message tr:nth-child(even) {
+            background-color: #f0f9ff;
+        }
+        
+        .message tr:hover {
+            background-color: #d1e7ff;
+        }
+        
+        /* 按钮样式 */
+        .btn-primary {
+            background-color: #4da6ff;
+            border-color: #4da6ff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3399ff;
+            border-color: #3399ff;
+        }
+        
+        .btn-outline-primary {
+            color: #4da6ff;
+            border-color: #4da6ff;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #4da6ff;
+            border-color: #4da6ff;
+        }
+        
+        .btn-warning {
+            background-color: #ffb34d;
+            border-color: #ffb34d;
+        }
+        
+        .btn-warning:hover {
+            background-color: #ff9900;
+            border-color: #ff9900;
+        }
+        
+        .btn-danger {
+            background-color: #ff6666;
+            border-color: #ff6666;
+        }
+        
+        .btn-danger:hover {
+            background-color: #ff4d4d;
+            border-color: #ff4d4d;
+        }
+        
+        .btn-success {
+            background-color: #66cc66;
+            border-color: #66cc66;
+        }
+        
+        .btn-success:hover {
+            background-color: #4dcc4d;
+            border-color: #4dcc4d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 聊天容器（居中显示） -->
+        <div class="chat-container">
+            <!-- 聊天头部（包含标题和清空按钮） -->
+            <div class="chat-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-stethoscope me-2"></i>
+                    Multi-Agent Medical Assistant
+                </h5>
+                <button id="clear-chat" class="btn btn-outline-danger">
+                    <i class="fas fa-trash me-2"></i> Clear Conversation
+                </button>
+            </div>
+            
+            <!-- 聊天内容区 -->
+            <div id="chat-body" class="chat-body">
+                <div class="message assistant-message">
+                    <div class="agent-tag">System</div>
+                    <p>Hello! I'm your medical assistant. You can ask me health-related questions or upload medical images for analysis.</p>
+                </div>
+            </div>
+            
+            <!-- 聊天输入区 -->
+            <div class="chat-footer">
+                <form id="chat-form" class="d-flex align-items-end">
+                    <div class="file-upload-container me-2">
+                        <button type="button" class="file-upload-btn btn btn-primary">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="file" class="file-upload-input" id="image-upload" accept="image/*">
+                    </div>
+                    
+                    <!-- 语音按钮 -->
+                    <div class="ms-2 me-2">
+                        <button type="button" class="btn btn-warning rounded-circle" id="voice-record-btn" style="width: 40px; height: 40px;">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <div class="preview-container" id="preview-container">
+                            <div class="d-flex align-items-center mb-2">
+                                <img id="preview-image" class="preview-image me-2" src="">
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="remove-image">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="message-input" class="form-control message-input" rows="1" placeholder="Ask a medical question..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary rounded-circle ms-2" style="width: 40px; height: 40px;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let audioContext;
+        let currentAudio = null;  // 存储当前音频实例
+        let selectedVoiceId = '21m00Tcm4TlvDq8ikWAM'; // 默认语音ID
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBody = document.getElementById('chat-body');
+            const chatForm = document.getElementById('chat-form');
+            const messageInput = document.getElementById('message-input');
+            const imageUpload = document.getElementById('image-upload');
+            const previewContainer = document.getElementById('preview-container');
+            const previewImage = document.getElementById('preview-image');
+            const removeImageBtn = document.getElementById('remove-image');
+            const clearChatBtn = document.getElementById('clear-chat');
+            const voiceRecordBtn = document.getElementById('voice-record-btn');
+            
+            // 初始化音频上下文
+            try {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+            } catch (e) {
+                console.error('Web Audio API is not supported in this browser');
+            }
+            
+            // 仅维护显示消息
+            let displayMessages = [];
+            
+            // 自动调整文本框高度
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // 处理图片上传
+            imageUpload.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 移除图片预览
+            removeImageBtn.addEventListener('click', function() {
+                imageUpload.value = '';
+                previewContainer.style.display = 'none';
+                previewImage.src = '';
+            });
+            
+            // 清空聊天记录
+            clearChatBtn.addEventListener('click', function() {
+                displayMessages = [];
+                chatBody.innerHTML = `
+                    <div class="message assistant-message">
+                        <div class="agent-tag">System</div>
+                        <p>Hello! I'm your medical assistant. You can ask me health-related questions or upload medical images for analysis.</p>
+                    </div>
+                `;
+            });
+            
+            // 处理表单提交
+            chatForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // 获取输入消息和图片
+                const message = messageInput.value.trim();
+                if (!message && !imageUpload.files.length) return;
+                
+                // 存储图片数据（如果有）
+                let imageDataUrl = null;
+                if (imageUpload.files.length > 0) {
+                    imageDataUrl = previewImage.src;
+                }
+                
+                // 添加用户消息到聊天区
+                const userMessageElement = document.createElement('div');
+                userMessageElement.className = 'message user-message';
+                
+                let messageContent = `<p>${message}</p>`;
+                if (imageDataUrl) {
+                    messageContent += `
+                        <div class="mt-2">
+                            <img src="${imageDataUrl}" alt="Uploaded image" class="img-fluid rounded" style="max-height: 200px;">
+                        </div>
+                    `;
+                }
+                
+                userMessageElement.innerHTML = messageContent;
+                chatBody.appendChild(userMessageElement);
+                
+                // 添加"思考中"指示器
+                const thinkingElement = document.createElement('div');
+                thinkingElement.className = 'message assistant-message thinking';
+                thinkingElement.innerHTML = `
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                `;
+                chatBody.appendChild(thinkingElement);
+                
+                // 滚动到底部
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // 清空输入框
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                try {
+                    let response;
+                    
+                    // 根据是否有图片选择不同接口
+                    if (imageUpload.files.length > 0) {
+                        const formData = new FormData();
+                        formData.append('text', message);
+                        formData.append('image', imageUpload.files[0]);
+                        
+                        response = await fetch('/upload', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include'
+                        });
+                    } else {
+                        response = await fetch('/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                query: message,
+                                conversation_history: []
+                            }),
+                            credentials: 'include'
+                        });
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 移除"思考中"指示器
+                    chatBody.removeChild(thinkingElement);
+                    
+                    // 添加助手响应
+                    const assistantMessageElement = document.createElement('div');
+                    assistantMessageElement.className = 'message assistant-message';
+                    
+                    // 清理文本用于语音合成
+                    const cleanText = removeMarkdown(data.response);
+                    
+                    // 构建响应HTML
+                    let assistantHtml = `
+                        <div class="agent-tag">${data.agent}</div>
+                        <div>${marked.parse(data.response)}</div>
+                        <div class="audio-controls mt-2">
+                            <button class="btn btn-sm btn-outline-primary play-tts-btn">
+                                <i class="fas fa-play"></i> Play Voice Response
+                            </button>
+                        </div>
+                    `;
+
+                    // 添加人机验证UI（如果需要）
+                    if (data.agent.includes("HUMAN_VALIDATION")) {
+                        assistantHtml += `
+                            <div class="mt-3 p-3 border rounded bg-light">
+                                <p><strong>⚠️ Human Validation Required:</strong> Do you agree with this result?</p>
+                                <button class="btn btn-success btn-sm validate-btn" data-validation="yes">✔ Yes</button>
+                                <button class="btn btn-danger btn-sm validate-btn" data-validation="no">✖ No</button>
+                                <textarea class="form-control mt-2 validation-comments" rows="2" placeholder="Add comments (optional)"></textarea>
+                            </div>
+                        `;
+                    }
+                    
+                    // 添加结果图片（如果有）
+                    if (data.result_image) {
+                        if (data.agent === "SKIN_LESION_AGENT, HUMAN_VALIDATION" && imageDataUrl) {
+                            assistantHtml += `
+                                <div class="image-side-by-side">
+                                    <div class="image-container">
+                                        <img src="${imageDataUrl}" alt="Original image" class="img-fluid rounded">
+                                        <div class="image-caption">Original Image</div>
+                                    </div>
+                                    <div class="image-container">
+                                        <img src="${data.result_image}" alt="Segmented image" class="img-fluid rounded">
+                                        <div class="image-caption">Segmentation Result</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            assistantHtml += `
+                                <div class="mt-3">
+                                    <img src="${data.result_image}" alt="Result image" class="result-image">
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    assistantMessageElement.innerHTML = assistantHtml;
+                    chatBody.appendChild(assistantMessageElement);
+
+                    // 绑定验证按钮事件
+                    if (data.agent.includes("HUMAN_VALIDATION")) {
+                        document.querySelectorAll('.validate-btn').forEach(button => {
+                            button.addEventListener('click', async function () {
+                                const validation = this.getAttribute('data-validation');
+                                const comments = this.closest('.p-3').querySelector('.validation-comments').value;
+                                await sendValidation(validation, comments);
+                            });
+                        });
+                    }
+                    
+                    // 绑定语音播放按钮事件
+                    const playButton = assistantMessageElement.querySelector('.play-tts-btn');
+                    if (playButton) {
+                        playButton.addEventListener('click', async function () {
+                            const textForSpeech = cleanText.length > 1000 ? cleanText.substring(0, 1000) + "..." : cleanText;
+                            
+                            this.disabled = true;
+                            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                            
+                            try {
+                                const audioUrl = await generateSpeech(textForSpeech);
+                                
+                                // 清理之前的音频
+                                if (currentAudio) {
+                                    currentAudio.pause();
+                                    URL.revokeObjectURL(currentAudio.src);
+                                    currentAudio = null;
+                                }
+                                
+                                currentAudio = new Audio(audioUrl);
+                                
+                                currentAudio.onplay = () => {
+                                    this.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                                    this.classList.remove('btn-outline-primary');
+                                    this.classList.add('btn-primary');
+                                    this.disabled = false;
+                                };
+                                
+                                currentAudio.onpause = () => {
+                                    this.innerHTML = '<i class="fas fa-play"></i> Play';
+                                    this.classList.remove('btn-primary');
+                                    this.classList.add('btn-outline-primary');
+                                };
+                                
+                                currentAudio.onended = () => {
+                                    this.innerHTML = '<i class="fas fa-play"></i> Play Again';
+                                    this.classList.remove('btn-primary');
+                                    this.classList.add('btn-outline-primary');
+                                    URL.revokeObjectURL(audioUrl);
+                                    currentAudio = null;
+                                };
+                                
+                                this.onclick = () => currentAudio.paused ? currentAudio.play() : currentAudio.pause();
+                                currentAudio.play();
+                            } catch (error) {
+                                console.error("TTS Error:", error);
+                                this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Voice failed';
+                                this.disabled = false;
+                            }
+                        });
+                    }
+                    
+                    // 存储消息（仅用于显示）
+                    displayMessages.push({
+                        role: "user",
+                        content: message,
+                        image: imageDataUrl
+                    });
+                    
+                    displayMessages.push({
+                        role: "assistant",
+                        content: data.response,
+                        agent: data.agent,
+                        resultImage: data.result_image
+                    });
+                    
+                    // 清空图片预览
+                    imageUpload.value = '';
+                    previewContainer.style.display = 'none';
+                    
+                } catch (error) {
+                    console.error("Error:", error);
+                    chatBody.removeChild(thinkingElement);
+                    
+                    // 显示错误消息
+                    const errorElement = document.createElement('div');
+                    errorElement.className = 'message assistant-message';
+                    errorElement.innerHTML = `
+                        <div class="agent-tag">System</div>
+                        <p class="text-danger">Sorry, there was an error processing your request. Please try again.</p>
+                    `;
+                    chatBody.appendChild(errorElement);
+                }
+                
+                // 再次滚动到底部
+                chatBody.scrollTop = chatBody.scrollHeight;
+            });
+
+            // 支持Enter发送消息（Shift+Enter换行）
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // 语音录制功能
+            voiceRecordBtn.addEventListener('click', toggleRecording);
+        });
+
+        // 切换录音状态
+        function toggleRecording() {
+            const voiceButton = document.getElementById('voice-record-btn');
+            
+            if (!isRecording) {
+                // 开始录音
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                        audioChunks = [];
+                        
+                        mediaRecorder.addEventListener('dataavailable', event => {
+                            audioChunks.push(event.data);
+                        });
+                        
+                        mediaRecorder.addEventListener('stop', () => {
+                            const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                            transcribeSpeech(audioBlob);
+                            
+                            // 重置按钮样式
+                            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                            voiceButton.classList.remove('btn-danger');
+                            voiceButton.classList.add('btn-warning');
+                        });
+                        
+                        mediaRecorder.start();
+                        isRecording = true;
+                        
+                        // 更新按钮样式为"录音中"
+                        voiceButton.innerHTML = '<i class="fas fa-stop"></i>';
+                        voiceButton.classList.remove('btn-warning');
+                        voiceButton.classList.add('btn-danger');
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                        alert('Could not access microphone. Please check your browser permissions.');
+                    });
+            } else {
+                // 停止录音
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // 显示"处理中"状态
+                voiceButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                voiceButton.disabled = true;
+                
+                // 停止麦克风流
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // 语音转文字
+        function transcribeSpeech(audioBlob) {
+            const voiceButton = document.getElementById('voice-record-btn');
+            const messageInput = document.getElementById('message-input');
+            
+            // 显示处理状态
+            const statusElement = document.createElement('div');
+            statusElement.className = 'alert alert-info mt-2';
+            statusElement.innerHTML = 'Processing voice input...';
+            document.querySelector('.chat-footer').prepend(statusElement);
+            
+            // 发送音频到后端转文字
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+            
+            fetch('/transcribe', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.transcript) {
+                    messageInput.value = data.transcript;
+                    messageInput.focus();
+                } else {
+                    throw new Error('Transcription failed');
+                }
+            })
+            .catch(error => {
+                console.error('Transcription error:', error);
+                statusElement.className = 'alert alert-danger mt-2';
+                statusElement.innerHTML = 'Failed to transcribe speech. Please try again or type your message.';
+            })
+            .finally(() => {
+                // 3秒后移除状态提示
+                setTimeout(() => {
+                    statusElement.remove();
+                    voiceButton.disabled = false;
+                    voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                }, 3000);
+            });
+        }
+
+        // 生成语音
+        async function generateSpeech(text) {
+            try {
+                const response = await fetch('/generate-speech', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        voice_id: selectedVoiceId
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const audioBlob = await response.blob();
+                return URL.createObjectURL(audioBlob);
+            } catch (error) {
+                console.error("Error generating speech:", error);
+                throw error;
+            }
+        }
+
+        // 发送人机验证结果
+        async function sendValidation(validation, comments) {
+            try {
+                // 显示处理中提示
+                const waitingEl = document.createElement('div');
+                waitingEl.className = 'alert alert-info mt-2';
+                waitingEl.innerHTML = '⏳ Processing validation...';
+                document.getElementById("chat-body").appendChild(waitingEl);
+
+                const formData = new FormData();
+                formData.append("validation_result", validation);
+                formData.append("comments", comments);
+
+                const response = await fetch("/validate", {
+                    method: "POST",
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+                waitingEl.remove();
+
+                // 显示验证后的响应
+                const validationMsg = document.createElement("div");
+                validationMsg.className = "message assistant-message";
+                validationMsg.innerHTML = `
+                    <div class="agent-tag">HUMAN_VALIDATED</div>
+                    <div>${marked.parse(result.message)}</div>
+                    <div>${marked.parse(result.response)}</div>
+                    <div class="audio-controls mt-2">
+                        <button class="btn btn-sm btn-outline-primary play-tts-btn">
+                            <i class="fas fa-play"></i> Play Voice Response
+                        </button>
+                    </div>
+                `;
+                document.getElementById("chat-body").appendChild(validationMsg);
+
+                // 绑定语音播放按钮
+                const cleanText = removeMarkdown(result.response);
+                const playButton = validationMsg.querySelector('.play-tts-btn');
+                if (playButton) {
+                    playButton.addEventListener('click', async function () {
+                        const textForSpeech = cleanText.length > 1000 ? cleanText.substring(0, 1000) + "..." : cleanText;
+                        
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                        
+                        try {
+                            const audioUrl = await generateSpeech(textForSpeech);
+                            
+                            if (currentAudio) {
+                                currentAudio.pause();
+                                URL.revokeObjectURL(currentAudio.src);
+                                currentAudio = null;
+                            }
+                            
+                            currentAudio = new Audio(audioUrl);
+                            
+                            currentAudio.onplay = () => {
+                                this.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                                this.classList.remove('btn-outline-primary');
+                                this.classList.add('btn-primary');
+                                this.disabled = false;
+                            };
+                            
+                            currentAudio.onpause = () => {
+                                this.innerHTML = '<i class="fas fa-play"></i> Play';
+                                this.classList.remove('btn-primary');
+                                this.classList.add('btn-outline-primary');
+                            };
+                            
+                            currentAudio.onended = () => {
+                                this.innerHTML = '<i class="fas fa-play"></i> Play Again';
+                                URL.revokeObjectURL(audioUrl);
+                                currentAudio = null;
+                            };
+                            
+                            this.onclick = () => currentAudio.paused ? currentAudio.play() : currentAudio.pause();
+                            currentAudio.play();
+                        } catch (error) {
+                            console.error("TTS Error:", error);
+                            this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Voice failed';
+                            this.disabled = false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Validation submission failed:", error);
+            }
+        }
+
+        // 移除Markdown格式（用于语音合成）
+        function removeMarkdown(text) {
+            if (!text) return '';
+            
+            text = text.replace(/```[\s\S]*?```/g, 'Code block omitted for speech.');
+            text = text.replace(/`([^`]+)`/g, '$1');
+            text = text.replace(/#{1,6}\s+/g, '');
+            text = text.replace(/(\*\*|__)(.*?)\1/g, '$2');
+            text = text.replace(/(\*|_)(.*?)\1/g, '$2');
+            text = text.replace(/^\s*[\*\-+]\s+/gm, '');
+            text = text.replace(/^\s*\d+\.\s+/gm, '');
+            text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+            text = text.replace(/!\[([^\]]+)\]\([^)]+\)/g, 'Image: $1');
+            text = text.replace(/^\>\s+/gm, '');
+            text = text.replace(/\n{2,}/g, '. ');
+            text = text.replace(/\n/g, ' ');
+            
+            return text;
+        }
+    </script>
+</body>
+</html>
