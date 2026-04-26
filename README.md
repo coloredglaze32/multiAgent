@@ -13,22 +13,6 @@
 [![GitHub Issues](https://img.shields.io/github/issues/souvikmajumder26/Multi-Agent-Medical-Assistant.svg?style=for-the-badge)](https://github.com/souvikmajumder26/Multi-Agent-Medical-Assistant/issues)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg?style=for-the-badge)
 
-## 📚 目录
-
-- [概述](#概述)
-- [演示](#演示)
-- [技术流程图](#技术流程图)
-- [核心功能](#核心功能)
-- [技术栈](#技术栈)
-- [安装和设置](#安装)
-- [使用方法](#使用方法)
-- [贡献](#贡献)
-- [许可证](#许可证)
-- [引用](#引用)
-- [联系](#联系)
-
----
-
 ## 📌 概述
 
 **多智能体医疗助手** 是一个 **基于AI的聊天机器人**，旨在协助 **医疗诊断、研究和患者互动**。
