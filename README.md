@@ -1,6 +1,5 @@
 <h1 align="center"><strong>多智能体医疗助手 :<h6 align="center">基于AI的多智能体系统，用于医疗诊断和辅助</h6></strong></h1>
 
-
 ## 📌 概述
 
 **多智能体医疗助手** 是一个 **基于AI的聊天机器人**，旨在协助 **医疗诊断、研究和患者互动**。
@@ -17,7 +16,7 @@
 
 ## 🛡️ 技术流程图
 
-![Technical Flow Chart](assets/final_medical_assistant_flowchart_light_rounded.png)
+![Technical Flow Chart](assets/model.jpg)
 
 ---
 
